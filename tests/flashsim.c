@@ -27,7 +27,7 @@ struct flashsim {
     FILE *fh;
 };
 
-struct flashsim *flashsim_open(const char *name, int size, int sector_size)
+struct flashsim *flashsim_open(char const *name, int size, int sector_size)
 {
     struct flashsim *sim = malloc(sizeof(struct flashsim));
 
@@ -60,7 +60,7 @@ void flashsim_sector_erase(struct flashsim *sim, int addr)
     free(empty);
 }
 
-void flashsim_read(struct flashsim *sim, int addr, uint8_t *buf, int len)
+void flashsim_read(struct flashsim *sim, int addr, void *buf, int len)
 {
     assert(fseek(sim->fh, addr, SEEK_SET) == 0);
     assert(fread(buf, 1, len, sim->fh) == (size_t) len);
@@ -76,8 +76,9 @@ void flashsim_read(struct flashsim *sim, int addr, uint8_t *buf, int len)
     logprintf("]\n");
 }
 
-void flashsim_program(struct flashsim *sim, int addr, const uint8_t *buf, int len)
+void flashsim_program(struct flashsim *sim, int addr, const void *buf, int len)
 {
+    const uint8_t *buf_cast = buf;
     logprintf("flashsim_program(0x%08x) + %d bytes [ ", addr, len);
     for (int i=0; i<len; i++) {
         logprintf("%02x ", buf[i]);
@@ -94,7 +95,7 @@ void flashsim_program(struct flashsim *sim, int addr, const uint8_t *buf, int le
     assert(fread(data, 1, len, sim->fh) == (size_t) len);
 
     for (int i=0; i<(int) len; i++)
-        data[i] &= buf[i];
+        data[i] &= buf_cast[i];
 
     assert(fseek(sim->fh, addr, SEEK_SET) == 0);
     assert(fwrite(data, 1, len, sim->fh) == (size_t) len);
